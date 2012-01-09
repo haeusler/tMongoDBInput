@@ -22,7 +22,21 @@
     String query = ElementParameterParser.getValue(node,"__QUERY__");
   	String sort = ElementParameterParser.getValue(node,"__SORT__");
   	String limit = ElementParameterParser.getValue(node,"__LIMIT__");
-  	
+
+    /*
+     * Retrieve internal schema : build columnList
+     */
+    List<IMetadataColumn> columnList = null;
+    List<IMetadataTable> metadatas = node.getMetadataList();
+    if(metadatas != null && metadatas.size() > 0)
+    {
+      IMetadataTable metadata = metadatas.get(0);
+      if(metadata != null)
+      {
+        columnList = metadata.getListColumns();
+      }
+    }
+    	
   	// Actually, the only mode currently available
     if (useExistingConnection)
     {
@@ -32,8 +46,14 @@
 		com.mongodb.DB db_<%=cid%> = (com.mongodb.DB) globalMap.get("<%=dbconn%>");
 	    com.mongodb.DBCollection coll_<%=cid%> = db_<%=cid%>.getCollection(<%=collection%>);
 	    com.mongodb.DBObject myQuery = (com.mongodb.DBObject) com.mongodb.util.JSON.parse(<%=query%>);
-	    // 'fields' is currently unused 
 	    com.mongodb.DBObject fields = new com.mongodb.BasicDBObject();
+        <%
+        for (IMetadataColumn colStmt : columnList) {
+          %>
+          fields.put("<%=colStmt%>", 1);
+          <%
+        }
+        %>
 	  	com.mongodb.DBCursor cursor_<%=cid%> = coll_<%=cid%>.find(myQuery, fields);
 	  	
 	  	<%
